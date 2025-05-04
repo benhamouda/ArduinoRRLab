@@ -4,10 +4,13 @@
   "description": "This project includes three servers.",
   "main": "server.js",
   "scripts": {
-  "start": "concurrently \"node server.js\" \"node serverArduinoList_to_file.js\" \"node serverCamLocalhost.js\"",
-  "install-concurrently": "npm install concurrently --save"
+    "start": "concurrently \"node server.js\" \"node serverArduinoList_to_file.js\" \"node serverCamLocalhost.js\"",
+    "install-concurrently": "npm install concurrently --save"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.1.2"
+  }
 }
