@@ -7,6 +7,8 @@ const fs = require('fs');
 const app = express();
 const portsDataPath = path.join(__dirname, 'ports.json');
 
+const PORT = process.env.PORT || 3000;
+
 // Configure multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
