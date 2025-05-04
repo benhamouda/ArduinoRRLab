@@ -4,7 +4,7 @@
   "description": "This project includes three servers.",
   "main": "server.js",
   "scripts": {
-    "start": "concurrently \"node server.js\" \"node serverArduinoList_to_file.js\" \"node serverCamLocalhost.js\"",
+    "start": "concurrently \"node server.js\" \"node serverArduinoList_to_file.js\" \"node serverCam.js\"",
     "install-concurrently": "npm install concurrently --save"
   },
   "keywords": [],
