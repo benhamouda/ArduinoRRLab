@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arduino Web IDE</title>
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css">
+    <style>
+        :root {
+            --arduino-blue: #00979D;
+            --arduino-blue-dark: #007980;
+            --arduino-orange: #FF8C00;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: rgba(255, 255, 255, 0.93);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            color: var(--arduino-blue);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--arduino-orange);
+            border-radius: 3px;
+        }
+        
+        .toolbar {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        button {
+            background-color: var(--arduino-blue);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background-color: var(--arduino-blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #editor {
+            border: 1px solid #ddd;
+            height: 50vh;
+            min-height: 400px;
+            border-radius: 6px;
+            box-shadow: inset 0 1px 10px rgba(0, 0, 0, 0.1);
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .filename-input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            flex-grow: 1;
+            min-width: 250px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .filename-input:focus {
+            outline: none;
+            border-color: var(--arduino-blue);
+            box-shadow: 0 0 0 3px rgba(0, 151, 157, 0.2);
+        }
+        
+        .status-bar {
+            margin-top: 15px;
+            padding: 8px 12px;
+            background-color: rgba(0, 151, 157, 0.1);
+            border-radius: 4px;
+            font-size: 14px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .upload-section {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.03);
+            border-radius: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        
+        #output {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            min-height: 50px;
+        }
+        
+        #uploadBtn {
+            background-color: #4CAF50;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+        }
+        
+        #refreshPorts {
+            background-color: #2196F3;
+            margin-left: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            #editor {
+                height: 40vh;
+            }
+        }
+        
+        /* Icons for buttons */
+        .icon {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--arduino-blue);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Arduino Web IDE</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="editor">Code Editor</div>
+            <div class="tab" data-tab="upload">Upload Sketch</div>
+        </div>
+        
+        <div id="editorTab">
+            <div class="toolbar">
+                <button id="saveBtn">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" />
+                    </svg>
+                    Save to File
+                </button>
+                <button id="loadBtn">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                    Load from File
+                </button>
+                <button id="newBtn">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M19.36,2.72L20.78,4.14L15.06,9.85C16.13,11.39 16.28,13.24 15.38,14.44L9.06,8.12C10.26,7.22 12.11,7.37 13.65,8.44L19.36,2.72M5.93,17.57C3.92,15.56 2.69,13.16 2.35,10.92L7.23,8.83L14.67,16.27L12.58,21.15C10.34,20.81 7.94,19.58 5.93,17.57Z" />
+                    </svg>
+                    New Sketch
+                </button>
+                <input type="text" id="filename" class="filename-input" placeholder="sketch_name.ino" value="sketch.ino">
+            </div>
+            
+            <textarea id="editor"></textarea>
+            
+            <div class="status-bar">
+                <span id="lineInfo">Line 1, Column 1</span>
+                <span id="fileInfo">sketch.ino</span>
+            </div>
+            
+            <div class="upload-section">
+                <h3>Compile & Upload</h3>
+                <div class="form-group">
+                    <label for="port">Serial Port:</label>
+                    <div style="display: flex; align-items: center;">
+                        <select id="port" name="port" required>
+                            <option value="">Loading ports...</option>
+                        </select>
+                        <button type="button" id="refreshPorts">Refresh</button>
+                    </div>
+                </div>
+                <button type="button" id="uploadEditorBtn">Upload Current Sketch</button>
+                <div id="status" class="status" style="display: none;"></div>
+                <div id="output"></div>
+            </div>
+        </div>
+        
+        <div id="uploadTab" style="display: none;">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="port2">Select Serial Port:</label>
+                    <div style="display: flex; align-items: center;">
+                        <select id="port2" name="port" required>
+                            <option value="">Loading ports...</option>
+                        </select>
+                        <button type="button" id="refreshPorts2">Refresh</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="sketch">Select your Arduino sketch (.ino file):</label>
+                    <input type="file" id="sketch" name="sketch" accept=".ino" required>
+                </div>
+                <button type="submit" id="uploadBtn">Compile and Upload</button>
+                <div id="status2" class="status" style="display: none;"></div>
+                <div id="output2"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CodeMirror and dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/anyword-hint.min.js"></script>
+    
+    <script>
+        // Initialize CodeMirror with Arduino (C-like) mode
+        const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: 'text/x-c++src',
+            theme: 'dracula',
+            lineNumbers: true,
+            indentUnit: 4,
+            tabSize: 4,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "Ctrl-S": function(cm) {
+                    saveFile();
+                    return false; // Prevent default browser behavior
+                }
+            },
+            lineWrapping: true
+        });
+
+        // Set default Arduino sketch template
+        const defaultSketch = `/*
+ * Arduino Sketch
+ * Created: ${new Date().toLocaleDateString()}
+ */
+
+void setup() {
+    // Initialize your pins here
+    pinMode(LED_BUILTIN, OUTPUT);
+    Serial.begin(9600);
+}
+
+void loop() {
+    // Main code that runs repeatedly
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(1000);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(1000);
+    
+    Serial.println("Hello from Arduino!");
+}`;
+
+        editor.setValue(defaultSketch);
+        
+        // Update cursor position in status bar
+        editor.on('cursorActivity', function() {
+            const cursor = editor.getCursor();
+            document.getElementById('lineInfo').textContent = 
+                `Line ${cursor.line + 1}, Column ${cursor.ch + 1}`;
+        });
+        
+        // Update file info when filename changes
+        document.getElementById('filename').addEventListener('input', function() {
+            document.getElementById('fileInfo').textContent = 
+                this.value || 'Untitled';
+        });
+        
+        document.getElementById('fileInfo').textContent = 
+            document.getElementById('filename').value || 'Untitled';
+
+        // Save to file functionality
+        function saveFile() {
+            const code = editor.getValue();
+            const filename = document.getElementById('filename').value || 'sketch.ino';
+            
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
+            
+            // Show a brief notification
+            const originalText = document.getElementById('saveBtn').textContent;
+            document.getElementById('saveBtn').textContent = '✓ Saved!';
+            setTimeout(() => {
+                document.getElementById('saveBtn').textContent = originalText;
+            }, 2000);
+        }
+        
+        document.getElementById('saveBtn').addEventListener('click', saveFile);
+
+        // Load from file functionality
+        document.getElementById('loadBtn').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.ino,.txt,.cpp,.h,.c';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Update filename input
+                document.getElementById('filename').value = file.name;
+                document.getElementById('fileInfo').textContent = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = event => {
+                    editor.setValue(event.target.result);
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        });
+
+        // New sketch functionality
+        document.getElementById('newBtn').addEventListener('click', () => {
+            if (confirm('Create new sketch? Any unsaved changes will be lost.')) {
+                editor.setValue(defaultSketch);
+                document.getElementById('filename').value = 'sketch.ino';
+                document.getElementById('fileInfo').textContent = 'sketch.ino';
+            }
+        });
+
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                document.getElementById('editorTab').style.display = 
+                    tab.dataset.tab === 'editor' ? 'block' : 'none';
+                document.getElementById('uploadTab').style.display = 
+                    tab.dataset.tab === 'upload' ? 'block' : 'none';
+            });
+        });
+
+        // Port loading functionality
+        async function loadPorts(selectId = 'port') {
+            const portSelect = document.getElementById(selectId);
+            portSelect.innerHTML = '<option value="">Loading ports...</option>';
+            
+            try {
+                const response = await fetch('/ports');
+                const data = await response.json();
+                
+                if (response.ok && data.ports && data.ports.length > 0) {
+                    portSelect.innerHTML = data.ports.map(port => 
+                        `<option value="${port.address}">${port.address} (${port.description || 'No description'})</option>`
+                    ).join('');
+                    
+                    // Select the first port by default if none is selected
+                    if (!portSelect.value && data.ports.length > 0) {
+                        portSelect.value = data.ports[0].address;
+                    }
+                } else {
+                    portSelect.innerHTML = '<option value="">No ports available</option>';
+                }
+            } catch (error) {
+                console.error('Error loading ports:', error);
+                portSelect.innerHTML = '<option value="">Error loading ports</option>';
+            }
+        }
+
+        // Initialize ports on load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPorts('port');
+            loadPorts('port2');
+            
+            // Refresh buttons
+            document.getElementById('refreshPorts').addEventListener('click', () => loadPorts('port'));
+            document.getElementById('refreshPorts2').addEventListener('click', () => loadPorts('port2'));
+            
+            // Upload from editor
+            document.getElementById('uploadEditorBtn').addEventListener('click', async () => {
+                const statusDiv = document.getElementById('status');
+                const outputDiv = document.getElementById('output');
+                const portSelect = document.getElementById('port');
+                const uploadBtn = document.getElementById('uploadEditorBtn');
+                const filename = document.getElementById('filename').value || 'sketch.ino';
+                
+                if (!portSelect.value) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = 'Error';
+                    outputDiv.textContent = 'Please select a serial port';
+                    return;
+                }
+                
+                const code = editor.getValue();
+                const blob = new Blob([code], { type: 'text/plain' });
+                const file = new File([blob], filename, { type: 'text/plain' });
+                
+                const formData = new FormData();
+                formData.append('sketch', file);
+                formData.append('port', portSelect.value);
+                
+                uploadBtn.disabled = true;
+                statusDiv.style.display = 'block';
+                statusDiv.textContent = 'Processing...';
+                statusDiv.className = 'status';
+                outputDiv.textContent = '';
+                
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.text();
+                    
+                    if (response.ok) {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = 'Success!';
+                        outputDiv.textContent = result;
+                    } else {
+                        statusDiv.className = 'status error';
+                        statusDiv.textContent = 'Error';
+                        outputDiv.textContent = result;
+                    }
+                } catch (error) {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = 'Error';
+                    outputDiv.textContent = 'Failed to connect to server';
+                } finally {
+                    uploadBtn.disabled = false;
+                }
+            });
+            
+            // Upload from file form
+            document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const statusDiv = document.getElementById('status2');
+                const outputDiv = document.getElementById('output2');
+                const fileInput = document.getElementById('sketch');
+                const uploadBtn = document.getElementById('uploadBtn');
+                const portSelect = document.getElementById('port2');
+                
+                if (!portSelect.value) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = 'Error';
+                    outputDiv.textContent = 'Please select a serial port';
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('sketch', fileInput.files[0]);
+                formData.append('port', portSelect.value);
+                
+                uploadBtn.disabled = true;
+                statusDiv.style.display = 'block';
+                statusDiv.textContent = 'Processing...';
+                statusDiv.className = 'status';
+                outputDiv.textContent = '';
+                
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.text();
+                    
+                    if (response.ok) {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = 'Success!';
+                        outputDiv.textContent = result;
+                    } else {
+                        statusDiv.className = 'status error';
+                        statusDiv.textContent = 'Error';
+                        outputDiv.textContent = result;
+                    }
+                } catch (error) {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = 'Error';
+                    outputDiv.textContent = 'Failed to connect to server';
+                } finally {
+                    uploadBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
