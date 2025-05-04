@@ -163,7 +163,7 @@ function cleanOldFiles(directory, maxAgeHours = 24) {
   });
 }
 
-const PORT = 3000;
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Upload server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
