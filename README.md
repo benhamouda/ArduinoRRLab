@@ -1,4 +1,4 @@
-# Arduino Remote Lab Project
+# Arduino Real Remote Lab Project
 This project is about an Arduino Remote Lab.
 It is initiated by A.Benhamouda and L.Mezai.
 It has two main parts: Hardware and Software.
